@@ -19,9 +19,11 @@ class GameScene: SKScene {
     var brick4 = SKSpriteNode()
     var brick5 = SKSpriteNode()
     var brick6 = SKSpriteNode()
+    var scoreLabel = SKLabelNode()
     
     var gameStarted = false
     var originalPosition: CGPoint?
+    var score = 0
     
     enum colliderType: UInt32 {
         case Bird = 1
@@ -31,6 +33,7 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         
         setUI()
+        setPhysics()
     }
     
     func setUI(){
@@ -56,16 +59,6 @@ class GameScene: SKScene {
         bird.zRotation = 0.2
         originalPosition = bird.position
         self.addChild(bird)
-        
-        //Bird Physics
-        bird.physicsBody = SKPhysicsBody(circleOfRadius: (birdTexture.size().height / 4) - 5)
-        bird.physicsBody?.affectedByGravity = false
-        bird.physicsBody?.isDynamic = true
-        bird.physicsBody?.mass = 0.3
-        bird.physicsBody?.contactTestBitMask = colliderType.Bird.rawValue
-        bird.physicsBody?.categoryBitMask = colliderType.Bird.rawValue
-        bird.physicsBody?.collisionBitMask = colliderType.Bird.rawValue
-        
         
         //Tree
         let treeTexture = SKTexture(imageNamed: "tree")
@@ -114,52 +107,82 @@ class GameScene: SKScene {
         brick6.zPosition = 1
         self.addChild(brick6)
         
+        //Score label
+        scoreLabel.fontName = "Helvetica"
+        scoreLabel.fontSize = 60
+        scoreLabel.text = "0"
+        scoreLabel.position = CGPoint(x: 0, y: self.frame.height / 2.5)
+        scoreLabel.zPosition = 2
+        self.addChild(scoreLabel)
+    }
+    
+    func fixBricksPositions(){
+        brick1.position = CGPoint(x: self.frame.width/5, y: -(self.frame.height/2.2))
+        brick2.position = CGPoint(x: ((self.frame.width / 5) + (self.frame.width / 14)), y: -(self.frame.height/2.2))
+        brick3.position = CGPoint(x: ((self.frame.width / 5) + (self.frame.width / 7)), y: -(self.frame.height/2.2))
+        brick4.position = CGPoint(x: (self.frame.width / 5) + (self.frame.width / 28) , y: -(self.frame.height/2.2) + (self.frame.height / 8))
+        brick5.position = CGPoint(x: (self.frame.width / 5) + 3*(self.frame.width / 28) , y: -(self.frame.height/2.2) + (self.frame.height / 8))
+        brick6.position = CGPoint(x: (self.frame.width / 5) + (self.frame.width / 14) , y: -(self.frame.height/2.2) + (self.frame.height / 4))
+    }
+    
+    func setPhysics() {
+        
+        //Bird Physics
+        let birdTexture = SKTexture(imageNamed: "bird")
+        bird.physicsBody = SKPhysicsBody(circleOfRadius: (birdTexture.size().height / 4) - 5)
+        bird.physicsBody?.affectedByGravity = false
+        bird.physicsBody?.isDynamic = true
+        bird.physicsBody?.mass = 0.15
+        bird.physicsBody?.contactTestBitMask = colliderType.Bird.rawValue
+        bird.physicsBody?.categoryBitMask = colliderType.Bird.rawValue
+        bird.physicsBody?.collisionBitMask = colliderType.Brick.rawValue
+        
         //Bricks Physics
+        let brickTextures = SKTexture(imageNamed: "brick")
         let brickSize = CGSize(width: brickTextures.size().width/2, height: (birdTexture.size().height/2) - 10)
         
         brick1.physicsBody = SKPhysicsBody(rectangleOf: brickSize)
         brick1.physicsBody?.isDynamic = true
         brick1.physicsBody?.affectedByGravity = true
         brick1.physicsBody?.allowsRotation = true
-        brick1.physicsBody?.mass = 0.4
+        brick1.physicsBody?.mass = 0.1
         brick1.physicsBody?.collisionBitMask = colliderType.Bird.rawValue
         
         brick2.physicsBody = SKPhysicsBody(rectangleOf: brickSize)
         brick2.physicsBody?.isDynamic = true
         brick2.physicsBody?.affectedByGravity = true
         brick2.physicsBody?.allowsRotation = true
-        brick2.physicsBody?.mass = 0.4
+        brick2.physicsBody?.mass = 0.1
         brick2.physicsBody?.collisionBitMask = colliderType.Bird.rawValue
 
         brick3.physicsBody = SKPhysicsBody(rectangleOf: brickSize)
         brick3.physicsBody?.isDynamic = true
         brick3.physicsBody?.affectedByGravity = true
         brick3.physicsBody?.allowsRotation = true
-        brick3.physicsBody?.mass = 0.4
+        brick3.physicsBody?.mass = 0.1
         brick3.physicsBody?.collisionBitMask = colliderType.Bird.rawValue
 
         brick4.physicsBody = SKPhysicsBody(rectangleOf: brickSize)
         brick4.physicsBody?.isDynamic = true
         brick4.physicsBody?.affectedByGravity = true
         brick4.physicsBody?.allowsRotation = true
-        brick4.physicsBody?.mass = 0.4
+        brick4.physicsBody?.mass = 0.1
         brick4.physicsBody?.collisionBitMask = colliderType.Bird.rawValue
 
         brick5.physicsBody = SKPhysicsBody(rectangleOf: brickSize)
         brick5.physicsBody?.isDynamic = true
         brick5.physicsBody?.affectedByGravity = true
         brick5.physicsBody?.allowsRotation = true
-        brick5.physicsBody?.mass = 0.4
+        brick5.physicsBody?.mass = 0.1
         brick5.physicsBody?.collisionBitMask = colliderType.Bird.rawValue
 
         brick6.physicsBody = SKPhysicsBody(rectangleOf: brickSize)
         brick6.physicsBody?.isDynamic = true
         brick6.physicsBody?.affectedByGravity = true
         brick6.physicsBody?.allowsRotation = true
-        brick6.physicsBody?.mass = 0.4
+        brick6.physicsBody?.mass = 0.1
         brick6.physicsBody?.collisionBitMask = colliderType.Bird.rawValue
     }
-    
     
     func touchDown(atPoint pos : CGPoint) {
         
@@ -222,8 +245,8 @@ class GameScene: SKScene {
                         if let sprite = node as? SKSpriteNode {
                             if sprite == bird {
                                 if let originalPosition = originalPosition {
-                                    let dx = -(touchLocation.x - originalPosition.y)
-                                    let dy = -(touchLocation.x - originalPosition.y)
+                                    let dx = -(touchLocation.x - originalPosition.x)
+                                    let dy = -(touchLocation.y - originalPosition.y)
                                     
                                     let impulse = CGVector(dx: dx, dy: dy)
                                     bird.physicsBody?.applyImpulse(impulse)
@@ -254,6 +277,9 @@ class GameScene: SKScene {
                 bird.physicsBody?.angularVelocity = 0
                 bird.zPosition = 1
                 bird.zRotation = 0.2
+                score = 0
+                scoreLabel.text = String(score)
+                fixBricksPositions()
                 if let originalPosition = originalPosition {
                     bird.position = originalPosition
                 }
@@ -266,7 +292,8 @@ class GameScene: SKScene {
 extension GameScene: SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         if contact.bodyA.collisionBitMask == colliderType.Bird.rawValue || contact.bodyB.collisionBitMask == colliderType.Bird.rawValue {
-            print("contact")
+            score += 1
+            scoreLabel.text = String(score)
         }
     }
 }
